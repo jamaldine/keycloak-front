@@ -8,6 +8,9 @@ import Logout from './pages/Logout';
 import Profile from './pages/Profile';
 import Nav from './components/modules/Nav';
 import KeycloakContext from './context/KeycloakContext';
+import store from './store/store';
+import { Provider } from 'react-redux';
+import { QueryClient, QueryClientProvider } from 'react-query';
 
 const keycloak = new Keycloak({
   realm: "realm_demo",
@@ -18,6 +21,9 @@ const keycloak = new Keycloak({
 
 // Créez un contexte pour stocker l'instance Keycloak
 // const KeycloakContext = createContext();
+
+
+const queryClient = new QueryClient();
 
 const App = () => {
 
@@ -46,18 +52,22 @@ const App = () => {
     return <div>Loading Keycloak...</div>;
   }
   return (
-    <KeycloakContext.Provider value={keycloak}>
-      <Router>
-        <Nav />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/logout" element={<Logout />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
-    </KeycloakContext.Provider>
+    <QueryClientProvider client={queryClient}>
+      <Provider store={store}>
+        <KeycloakContext.Provider value={keycloak}>
+          <Router>
+            <Nav />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/logout" element={<Logout />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Router>
+        </KeycloakContext.Provider>
+      </Provider>
+    </QueryClientProvider>
   )
 };
 
