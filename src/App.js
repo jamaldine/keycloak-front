@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+// import { createContext } from 'react';
 import Keycloak from 'keycloak-js';
-import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
-
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
-import Logout from './pages/Logout';;
+import Logout from './pages/Logout';
+import Profile from './pages/Profile';
+import Nav from './components/modules/Nav';
+import KeycloakContext from './context/KeycloakContext';
 
 const keycloak = new Keycloak({
   realm: "realm_demo",
@@ -13,14 +16,22 @@ const keycloak = new Keycloak({
 });
 
 
+// Créez un contexte pour stocker l'instance Keycloak
+// const KeycloakContext = createContext();
+
 const App = () => {
 
-  const [keycloakk, setKeycloak] = useState(null);
+  const [keyCloak, setKeyCloak] = useState(null);
   const [authenticated, setAuthenticated] = useState(false);
 
   React.useEffect(() => {
-    if (keycloakk) {
-      keycloak.init({ onLoad: 'login-required' })
+    if (keyCloak) {
+      keycloak.init({
+        onLoad: 'login-required',
+        // Activer l'authentification unique (SSO)
+        enableBearerInterceptor: true,
+        enableLogging: true, // Activez cette option pour le débogage
+      })
         .then(authenticated => {
           setAuthenticated(authenticated);
         })
@@ -28,21 +39,27 @@ const App = () => {
           console.error('Authentication failed:', err);
         });
     }
-    setKeycloak(keycloak);
-  }, [keycloakk]);
+    setKeyCloak(keycloak);
+  }, [keyCloak]);
 
-  if (!keycloakk) {
+  if (!keyCloak) {
     return <div>Loading Keycloak...</div>;
   }
   return (
-    <Router>
-      <Routes>
-        <Route exact path="/" element={<Home />} />
-        <Route path="/login" element={<Login keycloak={keycloakk} />} />
-        <Route path="/logout" element={<Logout keycloak={keycloakk} />} />
-      </Routes>
-    </Router>
+    <KeycloakContext.Provider value={keycloak}>
+      <Router>
+        <Nav />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/logout" element={<Logout />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </KeycloakContext.Provider>
   )
 };
 
+// Exportez le contexte pour une utilisation dans d'autres composants
 export default App;
